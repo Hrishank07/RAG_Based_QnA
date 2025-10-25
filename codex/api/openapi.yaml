@@ -1,0 +1,76 @@
+openapi: 3.1.0
+info:
+  title: Codex Admin API
+  version: 0.1.0
+servers:
+  - url: https://api.example.com
+paths:
+  /admin/upload-url:
+    post:
+      summary: Generate a presigned upload URL for document ingestion.
+      responses:
+        '200':
+          description: Presigned URL payload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  fields:
+                    type: object
+      tags:
+        - admin
+  /admin/reindex:
+    post:
+      summary: Trigger a manual reindex for a document.
+      parameters:
+        - in: query
+          name: doc_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Reindex request accepted.
+      tags:
+        - admin
+  /query:
+    post:
+      summary: Query Codex for an answer grounded in uploaded documents.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+      responses:
+        '200':
+          description: Answer and supporting chunks.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                  chunks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        doc_id:
+                          type: string
+                        chunk_id:
+                          type: string
+                        text:
+                          type: string
+                        score:
+                          type: number
+      tags:
+        - query

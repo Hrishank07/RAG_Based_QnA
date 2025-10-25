@@ -1,0 +1,7 @@
+{
+  "app": "python -m codex.infra.app",
+  "context": {
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "aws-cdk:enableDiffNoFail": "true"
+  }
+}

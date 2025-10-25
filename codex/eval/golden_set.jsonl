@@ -1,0 +1,1 @@
+{"question": "What is the Codex ingestion bucket name?", "expected_answer": "The S3 bucket storing uploads is CodexDocs."}
