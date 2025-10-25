@@ -5,3 +5,4 @@ black==24.4.2
 ruff==0.5.5
 pytest==8.2.2
 requests==2.32.3
+streamlit==1.37.0

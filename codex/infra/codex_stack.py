@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any, Dict
 
 from aws_cdk import (  # type: ignore[import]
@@ -64,26 +65,7 @@ class CodexStack(Stack):
             "OpenSearchEncryptionPolicy",
             name="codex-os-encryption",
             type="encryption",
-            policy={
-                "Rules": [
-                    {
-                        "Resource": [
-                            "collection/codex-search",
-                            "collection/codex-vector",
-                        ],
-                        "ResourceType": "collection",
-                    }
-                ],
-                "AWSOwnedKey": True,
-            },
-        )
-
-        network_policy = aoss.CfnSecurityPolicy(
-            self,
-            "OpenSearchNetworkPolicy",
-            name="codex-os-network",
-            type="network",
-            policy=[
+            policy=json.dumps(
                 {
                     "Rules": [
                         {
@@ -94,9 +76,32 @@ class CodexStack(Stack):
                             "ResourceType": "collection",
                         }
                     ],
-                    "AllowFromPublic": True,
+                    "AWSOwnedKey": True,
                 }
-            ],
+            ),
+        )
+
+        network_policy = aoss.CfnSecurityPolicy(
+            self,
+            "OpenSearchNetworkPolicy",
+            name="codex-os-network",
+            type="network",
+            policy=json.dumps(
+                [
+                    {
+                        "Rules": [
+                            {
+                                "Resource": [
+                                    "collection/codex-search",
+                                    "collection/codex-vector",
+                                ],
+                                "ResourceType": "collection",
+                            }
+                        ],
+                        "AllowFromPublic": True,
+                    }
+                ]
+            ),
         )
         network_policy.add_dependency(encryption_policy)
 
@@ -168,27 +173,32 @@ class CodexStack(Stack):
             "OpenSearchAccessPolicy",
             name="codex-os-access",
             type="data",
-            policy=[
-                {
-                    "Rules": [
-                        {
-                            "Resource": [
-                                "collection/codex-search",
-                                "collection/codex-vector",
-                            ],
-                            "Permission": [
-                                "aoss:DescribeCollectionItems",
-                                "aoss:ReadDocument",
-                                "aoss:WriteDocument",
-                            ],
-                        }
-                    ],
-                    "Principal": [ingest_role.role_arn],
-                }
-            ],
+            policy=json.dumps(
+                [
+                    {
+                        "Rules": [
+                            {
+                                "Resource": [
+                                    "collection/codex-search",
+                                    "collection/codex-vector",
+                                ],
+                                "Permission": [
+                                    "aoss:DescribeCollectionItems",
+                                    "aoss:ReadDocument",
+                                    "aoss:WriteDocument",
+                                ],
+                            }
+                        ],
+                        "Principal": [ingest_role.role_arn],
+                    }
+                ]
+            ),
         )
         access_policy.add_dependency(search_collection)
         access_policy.add_dependency(vector_collection)
+
+        search_index_name = "codex-chunks-bm25"
+        vector_index_name = "codex-chunks-vector"
 
         ingest_function = _lambda.Function(
             self,
@@ -201,7 +211,11 @@ class CodexStack(Stack):
                 documents_table=documents_table.table_name,
                 chunks_table=chunks_table.table_name,
                 search_collection=search_collection.attr_id,
+                search_collection_endpoint=search_collection.attr_collection_endpoint,
                 vector_collection=vector_collection.attr_id,
+                vector_collection_endpoint=vector_collection.attr_collection_endpoint,
+                search_index_name=search_index_name,
+                vector_index_name=vector_index_name,
             ),
             timeout=Duration.minutes(5),
             log_retention=logs.RetentionDays.ONE_MONTH,
@@ -254,7 +268,11 @@ class CodexStack(Stack):
                 documents_table=documents_table.table_name,
                 chunks_table=chunks_table.table_name,
                 search_collection=search_collection.attr_id,
+                search_collection_endpoint=search_collection.attr_collection_endpoint,
                 vector_collection=vector_collection.attr_id,
+                vector_collection_endpoint=vector_collection.attr_collection_endpoint,
+                search_index_name=search_index_name,
+                vector_index_name=vector_index_name,
             ),
             timeout=Duration.seconds(30),
             log_retention=logs.RetentionDays.ONE_MONTH,
@@ -278,12 +296,20 @@ class CodexStack(Stack):
         documents_table: str,
         chunks_table: str,
         search_collection: str,
+        search_collection_endpoint: str,
         vector_collection: str,
+        vector_collection_endpoint: str,
+        search_index_name: str,
+        vector_index_name: str,
     ) -> Dict[str, str]:
         return {
             "DOCS_BUCKET": bucket,
             "DOCUMENTS_TABLE": documents_table,
             "CHUNKS_TABLE": chunks_table,
             "SEARCH_COLLECTION_ID": search_collection,
+            "SEARCH_COLLECTION_ENDPOINT": search_collection_endpoint,
             "VECTOR_COLLECTION_ID": vector_collection,
+            "VECTOR_COLLECTION_ENDPOINT": vector_collection_endpoint,
+            "SEARCH_INDEX_NAME": search_index_name,
+            "VECTOR_INDEX_NAME": vector_index_name,
         }

@@ -21,3 +21,14 @@ codex/
 4. Synthesize the infrastructure with `cdk synth --app "python -m codex.infra.app"`.
 
 CI is configured via GitHub Actions to run linting, unit tests, and `cdk synth` on every pull request. Deployments to the `main` branch are gated behind a manual approval step.
+
+## Preview console
+
+Want a sneak peek into the future admin experience? Launch the Streamlit prototype:
+
+```bash
+pip install -r requirements-dev.txt
+streamlit run codex/console/app.py
+```
+
+Set `CODEX_API_URL` to wire the “Ask Codex” panel to your deployed `/query` endpoint, otherwise the app falls back to curated mock data so you can still demo the pipeline story end-to-end.
