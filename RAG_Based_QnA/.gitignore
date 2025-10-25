@@ -1,0 +1,14 @@
+# Mac system files
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Parent directory
+../*/
+!../RAG_Based_QnA/
